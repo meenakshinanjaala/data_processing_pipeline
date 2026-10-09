@@ -1,29 +1,30 @@
 # 
-#import csv
-#import json
-#import logging
-#import os
+
+import csv
+import json
+import logging
+import os
 
 # 1. Create project folder
-#PROJECT_FOLDER = "data_pipeline"
+PROJECT_FOLDER = "data_pipeline"
 
-#os.makedirs(PROJECT_FOLDER, exist_ok=True)
+os.makedirs(PROJECT_FOLDER, exist_ok=True)
 
 # 2. File names
-#config_file = os.path.join(PROJECT_FOLDER, "config.json")
-#input_file = os.path.join(PROJECT_FOLDER, "input.csv")
-#output_file = os.path.join(PROJECT_FOLDER, "output.csv")
-#log_file = os.path.join(PROJECT_FOLDER, "pipeline.log")
-#readme_file = os.path.join(PROJECT_FOLDER, "README.md")
-#requirements_file = os.path.join(PROJECT_FOLDER, "requirements.txt")
+config_file = os.path.join(PROJECT_FOLDER, "config.json")
+input_file = os.path.join(PROJECT_FOLDER, "input.csv")
+output_file = os.path.join(PROJECT_FOLDER, "output.csv")
+log_file = os.path.join(PROJECT_FOLDER, "pipeline.log")
+readme_file = os.path.join(PROJECT_FOLDER, "README.md")
+requirements_file = os.path.join(PROJECT_FOLDER, "requirements.txt")
 
 # 3. Create configuration file
-#config = {
-#    "input_file": "input.csv",
-#    "output_file": "output.csv",
-#    "missing_age": 0,
-#    "missing_marks": 0
-#}
+config = {
+    "input_file": "input.csv",
+   "output_file": "output.csv",
+    "missing_age": 0,
+   "missing_marks": 0
+}
 
 #with open(config_file, "w") as file:
 #    json.dump(config, file, indent=4)
