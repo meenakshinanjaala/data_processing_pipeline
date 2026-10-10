@@ -1,81 +1,176 @@
+ 
 import csv
 import json
 import logging
-import argparse
-from pathlib import Path
+import os
 
+# 1. Create project folder
+PROJECT_FOLDER = "data_pipeline"
+
+os.makedirs(PROJECT_FOLDER, exist_ok=True)
+
+# 2. File names
+config_file = os.path.join(PROJECT_FOLDER, "config.json")
+input_file = os.path.join(PROJECT_FOLDER, "input.csv")
+output_file = os.path.join(PROJECT_FOLDER, "output.csv")
+log_file = os.path.join(PROJECT_FOLDER, "pipeline.log")
+readme_file = os.path.join(PROJECT_FOLDER, "README.md")
+requirements_file = os.path.join(PROJECT_FOLDER, "requirements.txt")
+
+# 3. Create configuration file
+config = {
+    "input_file": "input.csv",
+    "output_file": "output.csv",
+    "missing_age": 0,
+    "missing_marks": 0
+}
+
+with open(config_file, "w") as file:
+    json.dump(config, file, indent=4)
+
+# 4. Set up logging
 logging.basicConfig(
-level=logging.INFO,
-format="%(levelname)s: %(message)s"
+    filename=log_file,
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-def process_data(input_file, output_file):
-input_path = Path(input_file)
-output_path = Path(output_file)
+logging.info("Data processing pipeline started")
 
-if not input_path.exists():
-    logging.error("Input file not found: %s", input_file)
-    return False
+# 5. Create sample input CSV
+sample_data = [
+    ["name", "age", "marks", "email"],
+    ["Ravi", "20", "85.5", "ravi@gmail.com"],
+    ["Sita", "", "90", "sita@gmail.com"],
+    ["Arun", "abc", "75", ""],
+    ["Meena", "21", "", "meena@gmail.com"],
+    ["", "19", "88", "unknown@gmail.com"]
+]
 
+with open(input_file, "w", newline="") as file:
+    writer = csv.writer(file)
+    writer.writerows(sample_data)
+
+logging.info("Input CSV file created")
+
+# 6. Read and clean the data
 cleaned_data = []
 
-try:
-    with input_path.open("r", encoding="utf-8-sig", newline="") as file:
-        reader = csv.DictReader(file)
+with open(input_file, "r", newline="") as file:
+    reader = csv.DictReader(file)
 
-        if not reader.fieldnames:
-            logging.error("Input CSV is empty or has no header.")
-            return False
+    for row in reader:
+        # Handle missing name
+        name = row.get("name", "").strip()
 
-        for row in reader:
-            cleaned_row = {}
+        if name == "":
+            name = "Unknown"
 
-            for key, value in row.items():
-                if key is not None:
-                    cleaned_row[key.strip()] = (
-                        value.strip() if value is not None else ""
-                    )
+        # Convert age into integer
+        try:
+            age = int(row.get("age", "").strip())
 
-            if not any(cleaned_row.values()):
-                continue
+            if age < 0 or age > 120:
+                age = 0
 
-            cleaned_data.append(cleaned_row)
+        except (ValueError, TypeError):
+            age = 0
 
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+        # Convert marks into float
+        try:
+            marks = float(row.get("marks", "").strip())
 
-    with output_path.open("w", encoding="utf-8") as file:
-        json.dump(cleaned_data, file, indent=4, ensure_ascii=False)
+            if marks < 0 or marks > 100:
+                marks = 0
 
-    logging.info("Processing completed successfully.")
-    logging.info("Records processed: %d", len(cleaned_data))
-    logging.info("Output saved to: %s", output_file)
-    return True
+        except (ValueError, TypeError):
+            marks = 0
 
-except (OSError, csv.Error, json.JSONDecodeError) as error:
-    logging.error("Error processing data: %s", error)
-    return False
+        # Handle missing email
+        email = row.get("email", "").strip()
 
-def main():
-parser = argparse.ArgumentParser(
-description="Clean CSV data and convert it to JSON."
-)
+        if email == "":
+            email = "not_provided"
 
-parser.add_argument(
-    "input_file",
-    nargs="?",
-    default="input.csv",
-    help="Path to the input CSV file"
-)
+        # Add cleaned record
+        cleaned_data.append({
+            "name": name,
+            "age": age,
+            "marks": marks,
+            "email": email
+        })
 
-parser.add_argument(
-    "-o",
-    "--output",
-    default="output.json",
-    help="Path to the output JSON file"
-)
+logging.info("Missing values handled")
+logging.info("Data types converted")
 
-args = parser.parse_args()
-process_data(args.input_file, args.output)
+# 7. Write cleaned data to output CSV
+with open(output_file, "w", newline="") as file:
+    fieldnames = ["name", "age", "marks", "email"]
 
-if name == "main":
-main()
+    writer = csv.DictWriter(file, fieldnames=fieldnames)
+    writer.writeheader()
+    writer.writerows(cleaned_data)
+
+logging.info("Cleaned output CSV created")
+logging.info("Data processing pipeline completed")
+
+# 8. Create README file
+readme_content = """# Data Processing Pipeline
+
+## Project Description
+This project reads raw data from a CSV file,
+cleans the data, converts data types,
+handles missing values, and creates
+a cleaned output CSV file.
+
+## Features
+- Reads CSV input data
+- Handles missing values
+- Converts age to integer
+- Converts marks to float
+- Handles invalid values
+- Creates output CSV
+- Implements logging
+- Uses configuration management
+
+## How to Run
+1. Install Python 3.
+2. Run main.py.
+3. Check the data_pipeline folder.
+4. Open output.csv to see cleaned data.
+
+## Files
+- main.py: Main Python program
+- input.csv: Raw input data
+- output.csv: Cleaned data
+- config.json: Configuration settings
+- pipeline.log: Log file
+- requirements.txt: Required libraries
+"""
+
+with open(readme_file, "w") as file:
+    file.write(readme_content)
+
+# 9. Create requirements.txt
+with open(requirements_file, "w") as file:
+    file.write("# No external libraries required\n")
+
+print("================================")
+print("DATA PROCESSING PIPELINE")
+print("================================")
+print("Pipeline completed successfully!")
+print()
+print("Created folder:", PROJECT_FOLDER)
+print("Created files:")
+print("- input.csv")
+print("- output.csv")
+print("- config.json")
+print("- pipeline.log")
+print("- README.md")
+print("- requirements.txt")
+print()
+print("Cleaned data:")
+print()
+
+for record in cleaned_data:
+    print(record)
